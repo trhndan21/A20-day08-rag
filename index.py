@@ -257,32 +257,10 @@ def _split_by_size(
 # =============================================================================
 
 def get_embedding(text: str) -> List[float]:
-    """
-    Tạo embedding vector cho một đoạn text.
-
-    Ưu tiên:
-      1. OpenAI text-embedding-3-small (nếu có OPENAI_API_KEY trong .env)
-         Dims: 1536, multilingual, nhanh, cần API key + billing
-      2. Sentence Transformers paraphrase-multilingual-MiniLM-L12-v2 (local)
-         Dims: 384, multilingual (hỗ trợ tiếng Việt), chạy local không cần API
-
-    QUAN TRỌNG: Model khi index và khi query PHẢI giống nhau.
-    Nếu đổi model → xóa chroma_db/ và chạy build_index() lại.
-    """
-    openai_key = os.getenv("OPENAI_API_KEY")
-
-    if openai_key:
-        from openai import OpenAI
-        client = OpenAI(api_key=openai_key)
-        response = client.embeddings.create(
-            input=text,
-            model="text-embedding-3-small",
-        )
-        return response.data[0].embedding
-
-    # Fallback: Sentence Transformers (local, không cần API key)
-    model = _get_st_model()
-    return model.encode(text, normalize_embeddings=True).tolist()
+    from sentence_transformers import SentenceTransformer
+    if not hasattr(get_embedding, "_model"):
+        get_embedding._model = SentenceTransformer("all-MiniLM-L6-v2")
+    return get_embedding._model.encode(text, normalize_embeddings=True).tolist()
 
 
 def build_index(docs_dir: Path = DOCS_DIR, db_dir: Path = CHROMA_DB_DIR) -> None:
