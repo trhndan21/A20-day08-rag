@@ -1,12 +1,7 @@
-import os
 import re
 import chromadb
 from pathlib import Path
 from typing import List, Dict, Any
-from dotenv import load_dotenv
-
-load_dotenv()
-
 # CẤU HÌNH
 DOCS_DIR = Path(__file__).parent / "data" / "docs"
 CHROMA_DB_DIR = Path(__file__).parent / "chroma_db"
@@ -98,20 +93,22 @@ def chunk_document(doc: Dict[str, Any]) -> List[Dict[str, Any]]:
 
 # STEP 3: EMBED + STORE
 def get_embedding(text: str) -> List[float]:
-    from openai import OpenAI
-    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    response = client.embeddings.create(
-        input=text,
-        model="text-embedding-3-small"
-    )
-    return response.data[0].embedding
+    from sentence_transformers import SentenceTransformer
+    if not hasattr(get_embedding, "_model"):
+        get_embedding._model = SentenceTransformer("all-MiniLM-L6-v2")
+    return get_embedding._model.encode(text, normalize_embeddings=True).tolist()
 
 def build_index(docs_dir: Path = DOCS_DIR, db_dir: Path = CHROMA_DB_DIR) -> None:
     print(f"Bắt đầu build index từ: {docs_dir}")
     db_dir.mkdir(parents=True, exist_ok=True)
     
     client = chromadb.PersistentClient(path=str(db_dir))
-    collection = client.get_or_create_collection(
+    # Xóa collection cũ nếu tồn tại (tránh lỗi dimension mismatch khi đổi model)
+    try:
+        client.delete_collection("rag_lab")
+    except Exception:
+        pass
+    collection = client.create_collection(
         name="rag_lab",
         metadata={"hnsw:space": "cosine"}
     )
@@ -172,5 +169,4 @@ def list_chunks(db_dir: Path = CHROMA_DB_DIR, n: int = 3) -> None:
 # MAIN
 if __name__ == "__main__":
     build_index()
-    # Bắt buộc phải gọi hàm này để giảng viên thấy chunking không bị cắt ngang
     list_chunks()
