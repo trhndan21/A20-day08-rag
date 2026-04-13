@@ -79,7 +79,7 @@ def _llm_judge(prompt: str) -> Dict[str, Any]:
     Fallback về score=None nếu parse lỗi.
     """
     try:
-        raw = call_llm(prompt)
+        raw, _grounded_spans = call_llm(prompt)
         # Strip markdown code blocks nếu có
         clean = raw.strip()
         if clean.startswith("```"):
