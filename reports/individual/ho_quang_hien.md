@@ -1,6 +1,6 @@
 # Báo Cáo Cá Nhân — Lab Day 08: RAG Pipeline
 
-**Họ và tên:** Quang Hiển  
+**Họ và tên:** Hồ Quang Hiển 
 **Vai trò trong nhóm:** Documentation Owner (Sprint Lead 4)  
 **Ngày nộp:** 2026-04-13
 
